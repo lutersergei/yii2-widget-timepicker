@@ -31,6 +31,7 @@
         this.upArrowStyle = options.upArrowStyle;
         this.downArrowStyle = options.downArrowStyle;
         this.containerClass = options.containerClass;
+        this.snapToStep = options.snapToStep;
 
         this._init();
     };
@@ -575,10 +576,21 @@
                 this.updateFromElementVal();
             }
         },
+        clear: function() {
+            this.hour = '';
+            this.minute = '';
+            this.second = '';
+            this.meridian = '';
+
+            this.$element.val('');
+        },
         setTime: function (time) {
+            if (!time) {
+                this.clear();
+                return;
+            }
             var arr,
                 timeArray;
-
             if (this.showMeridian) {
                 arr = time.split(' ');
                 timeArray = arr[0].split(':');
@@ -637,9 +649,30 @@
                     this.second = 59;
                 }
             }
+            if (this.snapToStep) {
+                this.minute = this.changeToNearestStep(this.minute, this.minuteStep);
+            }
 
             this.update();
         },
+
+        /**
+         * Given a segment value like 43, will round and snap the segment
+         * to the nearest "step", like 45 if step is 15. Segment will
+         * "overflow" to 0 if it's larger than 59 or would otherwise
+         * round up to 60.
+         */
+        changeToNearestStep: function (segment, step) {
+            if (segment % step === 0) {
+                return segment;
+            }
+            if (Math.round((segment % step) / step)) {
+                return (segment + (step - segment % step)) % 60;
+            } else {
+                return segment - segment % step;
+            }
+        },
+
         showWidget: function () {
             if (this.isOpen) {
                 return;
